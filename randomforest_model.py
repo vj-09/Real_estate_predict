@@ -1,38 +1,58 @@
-import pandas as pd
-
-main_file_path = 'dataset/train.csv'
-data = pd.read_csv(main_file_path)
-
-# print(data.describe())
-s = data.SalePrice
-# print(s.describe())
-b = data[['OverallQual','LotArea','GrLivArea',]]
-# print( b.head())
-y = data.SalePrice
-# print( y.head())
-X = b
-# print (x.head())
-from sklearn.model_selection import train_test_split
-train_X, val_X, train_y, val_y = train_test_split(X, y,random_state = 0)
+import numpy as np # linear algebra
+import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)
+In [2]:
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_absolute_error
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import Imputer
+In [3]:
+data = pd.read_csv('../input/train.csv')
+test = pd.read_csv('../input/test.csv')
+# print(len(test.columns))
+X = data.drop(['SalePrice'], axis=1)
+# print(X.describe())
+X = pd.get_dummies(X)
+# print(X.describe())
+print(X.columns)
+test = pd.get_dummies(test)
+y = data.SalePrice
+# X = X.drop(['HouseStyle_2.5Fin'], axis=1)
+c = list(X.columns)
+d = list(test.columns)
+# f = list(set(c).intersection(d))
+e = list(set(c).difference(d))
+print(len(e))
+for i in e:
+#     print(i)  
+    X = X.drop(i, axis=1)
 
+#vprint(test.describe())
+print(X.columns)
+# print(X.describe())
+X_train, X_test, y_train, y_test = train_test_split(X, y,random_state = 0)
+
+my_imputer = Imputer()
+imputed_X_train = my_imputer.fit_transform(X)
+imputed_X_test = my_imputer.transform(test)
+#print("Mean Absolute Error from Imputation:")
 def get_mae(max_leaf,pred_train,pred_val,targ_train,targ_val):
     model = RandomForestRegressor(max_leaf_nodes=max_leaf,random_state=0)
     model.fit(pred_train,pred_val)
     preds_val = model.predict(targ_train)
-    mae = mean_absolute_error(targ_val,preds_val)
-    return(mae)
-for a in [5,50,70,5000]:
-    my_mae = get_mae(a,train_X,train_y,val_X,val_y)
+    print (preds_val)
+#     mae = mean_absolute_error(targ_val,preds_val)
+#     return(mae)
+print(get_mae(700,imputed_X_train,  y,imputed_X_test, y))    
 
-    print("Max leaf nodes: %d  \t\t Mean Absolute Error:  %d" %(a, my_mae))
-from sklearn.ensemble import RandomForestRegressor
 model = RandomForestRegressor(max_leaf_nodes= 70)
-model.fit(X , y)
-melb_preds = model.predict(val_X)
-print(mean_absolute_error(val_y , melb_preds))
-test = pd.read_csv('dataset/test.csv')
-test_X =test[['OverallQual','LotArea','GrLivArea']]
-pred = model.predict(test_X)
+my_imputer = Imputer()
+print(X.columns)
+print(test.columns)
+
+imputed_X_train = my_imputer.fit_transform(X)
+imputed_X_test = my_imputer.transform(test)
+
+model.fit(imputed_X_train, y)
+pred = model.predict(imputed_X_test)
+
 print(pred)
